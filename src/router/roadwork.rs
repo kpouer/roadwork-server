@@ -8,7 +8,7 @@ use log::warn;
 
 use crate::{info, RoadworkServerData};
 use crate::model::sync_data::SyncData;
-use crate::service::data_service;
+use crate::service::data;
 
 pub(crate) async fn set_data(AuthBasic((username, password)): AuthBasic,
                              State(state): State<RoadworkServerData>,
@@ -22,7 +22,7 @@ pub(crate) async fn set_data(AuthBasic((username, password)): AuthBasic,
     info!("set_data user={} team={} service={}", username, team, opendata_service);
     let opendata_service = remove_suffix(opendata_service, ".json");
 
-    let string_sync_data_map = data_service::set_data(team.as_str(), opendata_service, sync_data_list);
+    let string_sync_data_map = data::set_data(team.as_str(), opendata_service, sync_data_list);
     Ok(Json(string_sync_data_map))
 }
 

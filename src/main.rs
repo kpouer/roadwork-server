@@ -2,7 +2,7 @@ use axum::Router;
 use log::info;
 
 use crate::router::admin::admin_routes;
-use crate::service::admin_service::AdminService;
+use crate::service::admin::AdminService;
 use crate::service::user_repository::UserRepository;
 
 mod hash;
