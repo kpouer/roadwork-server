@@ -1,15 +1,12 @@
-use std::collections::{HashMap, HashSet};
-use std::convert::Infallible;
+use std::collections::HashMap;
 
-use axum::body::Body;
 use axum::extract::State;
-use axum::http::{Response, response, StatusCode};
+use axum::http::StatusCode;
 use axum::Json;
-use axum::response::IntoResponse;
 use axum_auth::AuthBasic;
 use log::warn;
 
-use crate::{ info, RoadworkServerData};
+use crate::{info, RoadworkServerData};
 use crate::model::sync_data::SyncData;
 use crate::service::data_service;
 

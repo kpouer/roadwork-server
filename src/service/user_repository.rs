@@ -3,11 +3,9 @@ use std::path::Path;
 
 use log::{info, warn};
 use sqlx::{Error, Executor, Pool, Row, Sqlite, SqlitePool};
-use sqlx::sqlite::SqliteRow;
 
-use crate::{hash, info};
+use crate::hash;
 use crate::model::user::User;
-use crate::router::admin::list_teams;
 
 #[derive(Clone)]
 pub(crate) struct UserRepository {
@@ -15,32 +13,29 @@ pub(crate) struct UserRepository {
 }
 
 impl UserRepository {
+    pub(crate) async fn update_password(&self, user_name: &str, salted_password: String) -> bool {
+        info!("update_password {}", user_name);
+        let query = "UPDATE user SET password_hash = ? WHERE username = ?";
+        let result = sqlx::query(query)
+            .bind(&salted_password)
+            .bind(user_name)
+            .execute(&self.pool)
+            .await;
+        if result.is_err() {
+            warn!("Error updating password for user {}: {}", user_name, result.err().unwrap());
+            return false;
+        }
+        true
+    }
+}
+
+impl UserRepository {
     pub(crate) async fn new() -> Result<Self, sqlx::Error> {
-        let (pool, should_init_db) = get_database_pool().await;
+        let (pool, should_init_db) = get_database_pool().await?;
         let repository = UserRepository {
-            // users: vec![
-            //     User {
-            //         username: "admin".to_string(),
-            //         password_hash: hash::salt(&"admin".to_string()),
-            //         teams: vec!["admin".to_string()],
-            //         admin: true,
-            //     },
-            //     User {
-            //         username: "user".to_string(),
-            //         password_hash: hash::salt(&"user".to_string()),
-            //         teams: vec!["tc_france".to_string()],
-            //         admin: false,
-            //     },
-            //     User {
-            //         username: "user2".to_string(),
-            //         password_hash: hash::salt(&"user".to_string()),
-            //         teams: vec!["tc_france".to_string()],
-            //         admin: false,
-            //     },
-            // ],
             pool
         };
-        
+
         if should_init_db {
             repository.init_db().await;
         }
@@ -57,31 +52,48 @@ impl UserRepository {
             password_hash TEXT NOT NULL,
             admin BOOLEAN NOT NULL DEFAULT FALSE
         );
+        CREATE TABLE user_team (
+            username TEXT NOT NULL,
+            team TEXT NOT NULL,
+            PRIMARY KEY (username, team),
+            FOREIGN KEY (username) REFERENCES user(username),
+            FOREIGN KEY (team) REFERENCES team(name)
+        );
     ";
         self.pool.execute(query).await.unwrap();
         info!("Database initialized");
+        self.init_admin_user().await;
+    }
 
+    async fn init_admin_user(&self) {
+        info!("init_admin");
+        let team = "admin";
+        let username = "admin";
+        let password = "admin";
+        self.insert_team(team).await;
         let admin_user = User {
-            username: "admin".to_string(),
-            password_hash: hash::salt(&"admin".to_string()),
-            teams: vec!["admin".to_string()],
+            username: username.to_string(),
+            password_hash: hash::salt(&password.to_string()),
+            teams: vec![team.to_string()],
             admin: true,
         };
+
         self.insert_user(&admin_user).await;
+        self.link_user_team(username, team).await;
     }
 
     pub(crate) async fn insert_user(&self, user: &User) {
+        info!("insert_user {}", user.username);
         let query = "INSERT INTO user (username, password_hash, admin) VALUES (?, ?, ?)";
-        sqlx::query(query)
+        let result = sqlx::query(query)
             .bind(&user.username)
             .bind(&user.password_hash)
             .bind(&user.admin)
             .execute(&self.pool)
-            .await
-            .unwrap();
-        // todo : check result
-        for team in &user.teams {
-            self.link_user_team(&user.username, team).await;
+            .await;
+        match result {
+            Ok(_) => {},
+            Err(err) => warn!("Error inserting user {} : {}", user, err)
         }
     }
 
@@ -131,7 +143,7 @@ impl UserRepository {
             .collect();
         teams
     }
-    
+
     pub(crate) async fn list_users(&self) -> Vec<String> {
         info!("list_users");
         let users = sqlx::query("SELECT username FROM user ORDER BY username")
@@ -144,7 +156,9 @@ impl UserRepository {
         users
     }
 
-    async fn find_user(&self, username: &str) -> Option<User> {
+    pub(crate) async fn find_user<S: AsRef<str>>(&self, username: S) -> Option<User> {
+        let username = username.as_ref();
+        info!("find_user {}", username);
         let query = "SELECT username, password_hash, admin FROM user WHERE username = ?";
         let row = sqlx::query(query)
             .bind(username)
@@ -167,7 +181,7 @@ impl UserRepository {
 
     async fn find_user_teams(&self, username: &str) -> Vec<String> {
         let query = "SELECT DISTINCT team FROM user_team WHERE username = ?";
-        let mut rows = sqlx::query(query)
+        let rows = sqlx::query(query)
             .bind(username)
             .fetch_all(&self.pool)
             .await;
@@ -178,24 +192,36 @@ impl UserRepository {
 
         vec![]
     }
+
     async fn link_user_team(&self, username: &str, team: &str) {
-        info!("insert_user_team {} {}", username, team);
-        self.insert_team(team).await;
-        
+        info!("link_user_team {} {}", username, team);
+        let query = "INSERT INTO user_team (username, team) VALUES (?, ?)";
+        let result = sqlx::query(query)
+            .bind(username)
+            .bind(team)
+            .execute(&self.pool)
+            .await;
+        match result {
+            Ok(_) => {},
+            Err(err) => warn!("Error linking user {} with team {}: {}", username, team, err)
+        }
     }
 
     async fn insert_team(&self, team: &str) {
         info!("insert_team {}", team);
         let query = "INSERT INTO team (name) VALUES (?)";
-        sqlx::query(query)
+        let result = sqlx::query(query)
             .bind(team)
             .execute(&self.pool)
-            .await
-            .unwrap();
+            .await;
+        match result {
+            Ok(_) => {},
+            Err(err) => warn!("Error inserting team {}: {}", team, err)
+        }
     }
 }
 
-async fn get_database_pool() -> (Pool<Sqlite>, bool) {
+async fn get_database_pool() -> Result<(Pool<Sqlite>, bool), Error> {
     let db_path = "database/users";
     let should_init_db = !Path::new(db_path).exists();
     if should_init_db {
@@ -203,7 +229,7 @@ async fn get_database_pool() -> (Pool<Sqlite>, bool) {
         fs::File::create(db_path).expect("Unable to create database file");
     }
     let pool = SqlitePool::connect(&format!("sqlite:{}", db_path)).await?;
-    (pool, should_init_db)
+    Ok((pool, should_init_db))
 }
 
 
