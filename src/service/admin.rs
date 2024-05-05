@@ -15,7 +15,7 @@ impl AdminService {
 
     /// Retrieve a user from the repository and check it's password
     /// If the password is missing or wrong the user is not returned
-    pub(crate) async fn get_user<S: AsRef<str>>(&self, username: S, password: S) -> Option<User> {
+    pub(crate) async fn get_user<S: AsRef<str>>(&self, username: S, password: &Option<String>) -> Option<User> {
         info!("get_user");
         let user = self.user_repository.find_user(&username).await;
         if let Some(user) = user {

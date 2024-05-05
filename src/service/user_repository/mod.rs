@@ -68,42 +68,6 @@ impl UserRepository {
         self.link_user_team(username, team).await;
     }
 
-    pub(crate) async fn is_valid_for_team<S: AsRef<str>>(&self, username: &S, password: &S, team: &String) -> bool {
-        if Some(user)
-        self.is_user_valid(username, password).await && self.has_team(username, team).await
-    }
-
-    pub(crate) async fn is_user_valid(&self, username: &str, password: Option<String>) -> bool {
-        if password.is_none() {
-            warn!("Password is None");
-            return false;
-        }
-        let password = &password.unwrap();
-        return match self.find_user(username).await {
-            None => {
-                warn!("User not found {}", username);
-                false
-            }
-            Some(user) => {
-                info!("User found {}", username);
-                user.is_valid(password)
-            }
-        };
-    }
-
-    pub(crate) async fn has_team(&self, username: &str, team: &String) -> bool {
-        match self.find_user(username).await {
-            None => {
-                warn!("User not found {}", username);
-                false
-            }
-            Some(user) => {
-                info!("User found {}", username);
-                user.teams.contains(&team.to_string())
-            }
-        }
-    }
-
     async fn find_user_teams(&self, username: &str) -> Vec<String> {
         let query = "SELECT DISTINCT team FROM user_team WHERE username = ?";
         let rows = sqlx::query(query)

@@ -20,12 +20,12 @@ pub(crate) async fn set_data(AuthBasic((username, password)): AuthBasic,
                              State(state): State<RoadworkServerData>,
                              Path((team, opendata_service)): Path<(String, String)>,
                              sync_data_list: HashMap<String, SyncData>) -> Result<Json<HashMap<String, SyncData>>, StatusCode> {
-    if !state.user_repository.is_valid_for_team(&username, password, team).await {
+    if state.admin_service.get_user(&username, &password).await.e {
         warn!("User {} is not valid for team", username);
         return Err(StatusCode::UNAUTHORIZED);
     }
     info!("set_data user={} team={} service={}", username, team, opendata_service);
-    let opendata_service = remove_suffix(opendata_service, ".json");
+    let opendata_service = remove_suffix(&opendata_service, ".json");
 
     let string_sync_data_map = data::set_data(team.as_str(), opendata_service, sync_data_list);
     Ok(Json(string_sync_data_map))
