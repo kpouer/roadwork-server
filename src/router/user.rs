@@ -7,10 +7,11 @@ use log::{info, warn};
 
 use crate::{hash, RoadworkServerData};
 
-pub(crate) fn admin_routes() -> Router<RoadworkServerData> {
+pub(crate) fn user_routes() -> Router<RoadworkServerData> {
     Router::new()
-        .route("/teams", get(list_teams))
-        .route("/users", get(list_users))
+        .route("/change_password", post(change_password))
+        .route("/check/:bcrypted/:password", get(check))
+        .route("/salt/:password", get(salt))
 }
 
 async fn change_password(AuthBasic((username, password)): AuthBasic,
@@ -34,25 +35,6 @@ async fn change_password(AuthBasic((username, password)): AuthBasic,
         }
     }
     Err("Password not changed")
-}
-
-pub(crate) async fn list_teams(AuthBasic((username, password)): AuthBasic,
-                               State(state): State<RoadworkServerData>) -> Result<Json<Vec<String>>, StatusCode> {
-    if !state.admin_service.is_admin(username.as_str(), password).await {
-        warn!("User {} is not admin", username);
-        return Err(StatusCode::UNAUTHORIZED);
-    }
-    info!("list_teams");
-    let teams = state.user_repository.list_teams().await;
-    info!("list_teams -> {:?}", teams);
-    Ok(Json(teams))
-}
-
-pub(crate) async fn list_users(State(state): State<RoadworkServerData>) -> Json<Vec<String>> {
-    info!("list_users");
-    let user_names = state.user_repository.list_users().await;
-    info!("list_users -> {:?}", user_names);
-    Json(user_names)
 }
 
 pub(crate) async fn check(Path((bcrypted, password)): Path<(String, String)>) -> &'static str {
