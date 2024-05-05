@@ -68,7 +68,8 @@ impl UserRepository {
         self.link_user_team(username, team).await;
     }
 
-    pub(crate) async fn is_valid_for_team(&self, username: &str, password: Option<String>, team: &String) -> bool {
+    pub(crate) async fn is_valid_for_team<S: AsRef<str>>(&self, username: &S, password: &S, team: &String) -> bool {
+        if Some(user)
         self.is_user_valid(username, password).await && self.has_team(username, team).await
     }
 

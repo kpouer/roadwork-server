@@ -1,8 +1,9 @@
 use std::collections::HashMap;
 
-use axum::extract::State;
+use axum::extract::{Path, State};
 use axum::http::StatusCode;
-use axum::Json;
+use axum::{Json, Router};
+use axum::routing::{ post};
 use axum_auth::AuthBasic;
 use log::warn;
 
@@ -10,12 +11,16 @@ use crate::{info, RoadworkServerData};
 use crate::model::sync_data::SyncData;
 use crate::service::data;
 
+pub(crate) fn roadwork_routes() -> Router<RoadworkServerData> {
+    Router::new()
+        .route("/set_data/:team/:opendata_service", post(set_data))
+}
+
 pub(crate) async fn set_data(AuthBasic((username, password)): AuthBasic,
                              State(state): State<RoadworkServerData>,
-                             team: &String,
-                             opendata_service: &str,
+                             Path((team, opendata_service)): Path<(String, String)>,
                              sync_data_list: HashMap<String, SyncData>) -> Result<Json<HashMap<String, SyncData>>, StatusCode> {
-    if !state.user_repository.is_valid_for_team(username.as_str(), password, team).await {
+    if !state.user_repository.is_valid_for_team(&username, password, team).await {
         warn!("User {} is not valid for team", username);
         return Err(StatusCode::UNAUTHORIZED);
     }

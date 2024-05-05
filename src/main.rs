@@ -2,6 +2,7 @@ use axum::Router;
 use log::info;
 
 use crate::router::admin::admin_routes;
+use crate::router::roadwork::roadwork_routes;
 use crate::router::user::user_routes;
 use crate::service::admin::AdminService;
 use crate::service::user_repository::UserRepository;
@@ -30,6 +31,7 @@ async fn main() {
     let app = Router::new()
         .nest("/admin", admin_routes())
         .nest("/user", user_routes())
+        .nest("/roadwork", roadwork_routes())
         .with_state(roadwork_server_data)
         ;
     let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();

@@ -1,3 +1,3 @@
 pub(crate) mod admin;
-mod roadwork;
+pub(crate) mod roadwork;
 pub(crate) mod user;

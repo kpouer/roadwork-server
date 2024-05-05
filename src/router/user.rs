@@ -1,4 +1,4 @@
-use axum::{Json, Router};
+use axum::{ Router};
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::routing::{get, post};
@@ -22,16 +22,14 @@ async fn change_password(AuthBasic((username, password)): AuthBasic,
         warn!("Password is too short");
         return Err("Password is too short");
     }
-    if let Some(password) = password {
-        if let Some(user) = state.user_repository.find_user(&username).await {
-            if user.is_valid(password) {
-                if state.admin_service.change_password(username.as_str(), &new_password).await {
-                    return Ok(StatusCode::NO_CONTENT);
-                }
-            } else {
-                warn!("Password is incorrect");
-                return Err("Password is incorrect");
-            }
+    if password.is_none() {
+        warn!("Password is missing");
+        return Err("Password is missing");
+    }
+    let password = password.unwrap();
+    if state.admin_service.get_user(&username, &password).await.is_some() {
+        if state.admin_service.change_password(&username, &new_password).await {
+            return Ok(StatusCode::NO_CONTENT);
         }
     }
     Err("Password not changed")
