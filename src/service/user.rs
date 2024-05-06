@@ -15,7 +15,7 @@ impl AdminService {
 
     /// Retrieve a user from the repository and check it's password
     /// If the password is missing or wrong the user is not returned
-    pub(crate) async fn get_user<S: AsRef<str>>(&self, username: S, password: &Option<String>) -> Option<User> {
+    pub(crate) async fn get_user<S: AsRef<str>>(&self, username: &S, password: &S) -> Option<User> {
         info!("get_user");
         let user = self.user_repository.find_user(&username).await;
         if let Some(user) = user {
@@ -39,23 +39,33 @@ impl AdminService {
 
     /// Check if the user is an admin
     /// It is admin is the user and password are valid and the password has been modified
-    pub(crate) async fn is_admin<S: AsRef<str>>(&self, username: &S, password: Option<String>) -> bool {
-        info!("is_admin username={}", username.as_ref());
-        if let Some(password) = password {
-            if password == "admin" {
-                warn!("Password was not modified!");
-                return false;
-            }
-            if let Some(user) = self.user_repository.find_user(username).await {
-                if user.is_valid(password.as_str()) {
-                    return user.admin;
-                }
+    pub(crate) async fn is_admin(&self, username: &String, password: &String) -> bool {
+        info!("is_admin username={}", username);
+        if password == "admin" {
+            warn!("Password was not modified!");
+            return false;
+        }
+        if let Some(user) = self.user_repository.find_user(username).await {
+            if user.is_valid(password.as_str()) {
+                return user.admin;
             }
         }
         false
     }
 
-    async fn find_valid_user(&self, username: &str, password: &str) -> Option<User> {
+    pub(crate) async fn has_team(&self,
+                                 username: &String,
+                                 password: &String,
+                                 team: &String) -> bool {
+        if let Some(user) = self.find_valid_user(username, &password).await {
+            if user.teams.contains(team) {
+                return true;
+            }
+        }
+        false
+    }
+
+    async fn find_valid_user<S: AsRef<str>>(&self, username: &S, password: &String) -> Option<User> {
         if let Some(user) = self.user_repository.find_user(username).await {
             if user.is_valid(password) {
                 return Some(user);

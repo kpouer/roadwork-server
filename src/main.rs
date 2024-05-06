@@ -4,7 +4,7 @@ use log::info;
 use crate::router::admin::admin_routes;
 use crate::router::roadwork::roadwork_routes;
 use crate::router::user::user_routes;
-use crate::service::admin::AdminService;
+use crate::service::user::AdminService;
 use crate::service::user_repository::UserRepository;
 
 mod hash;
