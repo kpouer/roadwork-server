@@ -1,4 +1,4 @@
-FROM rust:1.77.2-alpine3.19 as build
+FROM rust:1.78-alpine3.19 as build
 COPY Cargo.toml /
 COPY src /
 RUN cargo build 
