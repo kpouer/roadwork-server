@@ -1,4 +1,6 @@
+use axum::http::StatusCode;
 use axum::Router;
+use axum::routing::get;
 use log::info;
 
 use crate::router::admin::admin_routes;
@@ -29,10 +31,12 @@ async fn main() {
         admin_service,
     };
     let app = Router::new()
+        .route("/ping", get(|| async { "pong" }))
         .nest("/admin", admin_routes())
         .nest("/user", user_routes())
         .nest("/roadwork", roadwork_routes())
         .with_state(roadwork_server_data)
+        .fallback(|| async { (StatusCode::NOT_FOUND, "Not Found") })
         ;
     let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
     info!("Listen on 0.0.0.0:8080");

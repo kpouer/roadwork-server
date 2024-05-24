@@ -16,7 +16,7 @@ impl UserRepository {
         users
     }
 
-    pub(crate) async fn update_password(&self, user_name: &str, salted_password: String) -> bool {
+    pub(crate) async fn update_password(&self, user_name: &str, salted_password: String) -> Result<(), String> {
         info!("update_password {}", user_name);
         let query = "UPDATE user SET password_hash = ? WHERE username = ?";
         let result = sqlx::query(query)
@@ -24,26 +24,8 @@ impl UserRepository {
             .bind(user_name)
             .execute(&self.pool)
             .await;
-        if result.is_err() {
-            warn!("Error updating password for user {}: {}", user_name, result.err().unwrap());
-            return false;
-        }
-        true
-    }
-
-    pub(crate) async fn insert_user(&self, user: &User) {
-        info!("insert_user {}", user.username);
-        let query = "INSERT INTO user (username, password_hash, admin) VALUES (?, ?, ?)";
-        let result = sqlx::query(query)
-            .bind(&user.username)
-            .bind(&user.password_hash)
-            .bind(&user.admin)
-            .execute(&self.pool)
-            .await;
-        match result {
-            Ok(_) => {},
-            Err(err) => warn!("Error inserting user {} : {}", user, err)
-        }
+        result.map(|_| ())
+            .map_err(|err| format!("Error updating password for user {}: {}", user_name, err))
     }
 
     pub(crate) async fn find_user<S: AsRef<str>>(&self, username: S) -> Option<User> {
@@ -67,5 +49,41 @@ impl UserRepository {
                 })
             }
         }
+    }
+
+    pub(crate) async fn insert_user(&self, user: &User) -> Result<(), String> {
+        info!("insert_user {}", user.username);
+        let query = "INSERT INTO user (username, password_hash, admin) VALUES (?, ?, ?)";
+        let result = sqlx::query(query)
+            .bind(&user.username)
+            .bind(&user.password_hash)
+            .bind(&user.admin)
+            .execute(&self.pool)
+            .await;
+        result.map(|_| ())
+            .map_err(|err| format!("Error inserting user {:?}: {}", user, err))
+    }
+
+    pub(crate) async fn delete_user(&self, username: &String) -> Result<(), String> {
+        info!("delete_user {}", username);
+        let _ = self.remove_all_user_teams(username).await?;
+        let query = "DELETE FROM user WHERE username = ?";
+        let result = sqlx::query(query)
+            .bind(username)
+            .fetch_all(&self.pool)
+            .await;
+        result.map(|_| ())
+            .map_err(|err| format!("Error delete_user {} : {}", username, err))
+    }
+
+    async fn remove_all_user_teams(&self, username: &String) -> Result<(), String> {
+        info!("remove_all_user_teams {}", username);
+        let query = "DELETE FROM user_team WHERE username = ?";
+        let result = sqlx::query(query)
+            .bind(username)
+            .execute(&self.pool)
+            .await;
+        result.map(|_| ())
+            .map_err(|err| format!("Error removin all teams from user {} : {}", username, err))
     }
 }

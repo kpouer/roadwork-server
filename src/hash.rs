@@ -1,7 +1,6 @@
 use log::warn;
 
-pub(crate) fn salt<S: AsRef<str>>(password: S) -> String {
-    let password = password.as_ref();
+pub(crate) fn salt(password: &String) -> String {
     bcrypt::hash(password, 4).unwrap()
 }
 

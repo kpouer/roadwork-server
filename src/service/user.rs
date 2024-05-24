@@ -30,7 +30,7 @@ impl AdminService {
         None
     }
 
-    pub(crate) async fn change_password<S: AsRef<str>>(&self, user_name: &S, clear_password: &S) -> bool {
+    pub(crate) async fn change_password<S: AsRef<str>>(&self, user_name: &S, clear_password: &String) -> Result<(), String> {
         let user_name = user_name.as_ref();
         info!("change_password username={}", user_name);
         let salted_password = hash::salt(clear_password);

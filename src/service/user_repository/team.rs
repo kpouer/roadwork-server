@@ -15,16 +15,40 @@ impl UserRepository {
         teams
     }
 
-    pub(crate) async fn insert_team(&self, team: &str) {
+    pub(crate) async fn insert_team(&self, team: &str) -> Result<(), String> {
         info!("insert_team {}", team);
         let query = "INSERT INTO team (name) VALUES (?)";
         let result = sqlx::query(query)
             .bind(team)
             .execute(&self.pool)
             .await;
-        match result {
-            Ok(_) => {},
-            Err(err) => warn!("Error inserting team {}: {}", team, err)
+
+        result.map(|_| ())
+            .map_err(|err| format!("Error inserting team {}: {}", team, err))
+    }
+
+    pub(crate) async fn remove_team(&self, team: &String) -> Result<(), String> {
+        info!("remove_team {}", team);
+        if self.team_has_users(team).await {
+            return Err(format!("Team {} has users", team));
         }
+        let query = "DELETE FROM team WHERE name = ?";
+        let result = sqlx::query(query)
+            .bind(team)
+            .execute(&self.pool)
+            .await;
+        result.map(|_| ())
+            .map_err(|err| format!("Error removing team {}: {}", team, err))
+    }
+
+    async fn team_has_users(&self, team: &String) -> bool {
+        let query = "SELECT COUNT(*) FROM user_team WHERE team = ?";
+        let count = sqlx::query(query)
+            .bind(team)
+            .fetch_one(&self.pool)
+            .await
+            .unwrap()
+            .get::<i64, _>(0);
+        count > 0
     }
 }

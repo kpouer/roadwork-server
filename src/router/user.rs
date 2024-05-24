@@ -28,7 +28,7 @@ async fn change_password(AuthBasic((username, password)): AuthBasic,
     }
     let password = password.unwrap();
     if state.admin_service.get_user(&username, &password).await.is_some() {
-        if state.admin_service.change_password(&username, &new_password).await {
+        if state.admin_service.change_password(&username, &new_password).await.is_ok() {
             return Ok(StatusCode::NO_CONTENT);
         }
     }
