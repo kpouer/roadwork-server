@@ -1,2 +1,5 @@
 /target/
 /users.json
+/data/
+/database/
+/.idea/
