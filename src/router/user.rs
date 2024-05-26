@@ -1,4 +1,4 @@
-use axum::{ Router};
+use axum::{Json, Router};
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::routing::{get, post};
@@ -6,12 +6,30 @@ use axum_auth::AuthBasic;
 use log::{info, warn};
 
 use crate::{hash, RoadworkServerData};
+use crate::model::user::User;
 
 pub(crate) fn user_routes() -> Router<RoadworkServerData> {
     Router::new()
         .route("/change_password", post(change_password))
+        .route("/info", get(get_user))
         .route("/check/:bcrypted/:password", get(check))
         .route("/salt/:password", get(salt))
+        .route("/test_connection/:teamname", get(test_connection))
+}
+
+async fn test_connection(AuthBasic((username, password)): AuthBasic,
+                         State(state): State<RoadworkServerData>,
+                         Path(teamname): Path<String>) -> String {
+    info!("test_connection user={}, teamname={}", username, teamname);
+    let password: String = password.unwrap_or_else(|| "".to_string());
+    if let Some(user) = state.admin_service.get_user(&username, &password).await {
+        if user.teams.contains(&teamname) {
+            return "OK".to_string();
+        }
+        return format!("User {} is not in team {}", username, teamname);
+    }
+
+    return "User is invalid".to_string();
 }
 
 async fn change_password(AuthBasic((username, password)): AuthBasic,
@@ -33,6 +51,21 @@ async fn change_password(AuthBasic((username, password)): AuthBasic,
         }
     }
     Err("Password not changed")
+}
+
+async fn get_user(AuthBasic((username, password)): AuthBasic,
+                  State(state): State<RoadworkServerData>) -> Result<Json<User>, StatusCode> {
+    info!("get_user username={}", username);
+    let password: String = password.unwrap_or_else(|| "".to_string());
+    if let Some(user) = state.admin_service.get_user(&username, &password).await {
+        let mut web_user = user.clone();
+        web_user.password_hash = "?????".to_string();
+        info!("get_user -> {:?}", web_user);
+        Ok(Json(web_user))
+    } else {
+        warn!("get_user user is invalid");
+        Err(StatusCode::UNAUTHORIZED)
+    }
 }
 
 pub(crate) async fn check(Path((bcrypted, password)): Path<(String, String)>) -> &'static str {

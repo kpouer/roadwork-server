@@ -1,5 +1,6 @@
-use log::{info, warn};
+use log::info;
 use sqlx::Row;
+
 use crate::model::user::User;
 use crate::service::user_repository::UserRepository;
 

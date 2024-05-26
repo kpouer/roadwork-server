@@ -1,4 +1,4 @@
-use log::{info, warn};
+use log::{debug, info, warn};
 use crate::hash;
 use crate::model::user::User;
 use crate::service::user_repository::UserRepository;
@@ -16,11 +16,12 @@ impl AdminService {
     /// Retrieve a user from the repository and check it's password
     /// If the password is missing or wrong the user is not returned
     pub(crate) async fn get_user<S: AsRef<str>>(&self, username: &S, password: &S) -> Option<User> {
-        info!("get_user");
+        debug!("get_user -> {}", username.as_ref());
         let user = self.user_repository.find_user(&username).await;
         if let Some(user) = user {
+            debug!("get_user : found {:?}", user);
             if user.is_valid(password) {
-                info!("get_user -> {}", user.username);
+                debug!("get_user password is valid");
                 return Some(user);
             }
             warn!("get_user password is invalid");
@@ -66,10 +67,14 @@ impl AdminService {
     }
 
     async fn find_valid_user<S: AsRef<str>>(&self, username: &S, password: &String) -> Option<User> {
+        debug!("find_valid_user -> {}", username.as_ref());
         if let Some(user) = self.user_repository.find_user(username).await {
+            debug!("find_valid_user : found {:?}", user);
             if user.is_valid(password) {
+                debug!("find_valid_user password is valid");
                 return Some(user);
             }
+            debug!("find_valid_user password is invalid");
         }
         None
     }

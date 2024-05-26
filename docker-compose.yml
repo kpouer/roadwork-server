@@ -1,7 +1,10 @@
 services:
   roadwork_server:
     image: roadwork_server:latest
+    environment:
+      - RUST_LOG=debug
     ports:
       - "8080:8080"
     volumes:
       - ./database:/database
+      - ./data:/data

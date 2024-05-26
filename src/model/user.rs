@@ -15,16 +15,6 @@ pub(crate) struct User {
 }
 
 impl User {
-    pub(crate) fn new_with_team(username: String, team: String) -> Self {
-        let password_hash = hash::salt(&username);
-        User {
-            username,
-            password_hash,
-            teams: vec![team],
-            admin: false
-        }
-    }
-
     pub(crate) fn is_valid<S: AsRef<str>>(&self, password: S) -> bool {
         debug!("is_valid username={}", self.username);
         let password = password.as_ref();

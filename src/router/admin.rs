@@ -13,12 +13,14 @@ pub(crate) fn admin_routes() -> Router<RoadworkServerData> {
     Router::new()
         .route("/teams", get(list_teams))
         .route("/team/:team_name", post(add_team))
+        .route("/team/:team_name", delete(delete_team))
         .route("/users", get(list_users))
         .route("/user", post(add_user))
         .route("/user/:user_name", delete(delete_user))
+        .route("/link/user/:user_name/team/:team_name", get(link_user_team))
 }
 
-pub(crate) async fn list_teams(AuthBasic((username, password)): AuthBasic,
+async fn list_teams(AuthBasic((username, password)): AuthBasic,
                                State(state): State<RoadworkServerData>) -> Result<Json<Vec<String>>, StatusCode> {
     info!("list_teams");
     check_admin(&state.admin_service, &username, &password).await?;
@@ -27,7 +29,7 @@ pub(crate) async fn list_teams(AuthBasic((username, password)): AuthBasic,
     Ok(Json(teams))
 }
 
-pub(crate) async fn add_team(AuthBasic((username, password)): AuthBasic,
+async fn add_team(AuthBasic((username, password)): AuthBasic,
                              State(state): State<RoadworkServerData>,
                              Path(team_name): Path<String>) -> Result<&'static str, StatusCode> {
     info!("add_team {}", team_name);
@@ -35,7 +37,15 @@ pub(crate) async fn add_team(AuthBasic((username, password)): AuthBasic,
     state.user_repository.insert_team(team_name.as_str()).await.map_or(Ok("KO"), |_| Ok("OK"))
 }
 
-pub(crate) async fn list_users(AuthBasic((username, password)): AuthBasic,
+async fn delete_team(AuthBasic((username, password)): AuthBasic,
+                                State(state): State<RoadworkServerData>,
+                                Path(removed_team): Path<String>) -> Result<&'static str, StatusCode> {
+    info!("delete_team {}", removed_team);
+    check_admin(&state.admin_service, &username, &password).await?;
+    state.user_repository.delete_team(&removed_team).await.map_or(Ok("KO"), |_| Ok("OK"))
+}
+
+async fn list_users(AuthBasic((username, password)): AuthBasic,
                                State(state): State<RoadworkServerData>) -> Result<Json<Vec<String>>, StatusCode> {
     info!("list_users");
     check_admin(&state.admin_service, &username, &password).await?;
@@ -44,7 +54,15 @@ pub(crate) async fn list_users(AuthBasic((username, password)): AuthBasic,
     Ok(Json(user_names))
 }
 
-pub(crate) async fn add_user(AuthBasic((username, password)): AuthBasic,
+async fn link_user_team(AuthBasic((username, password)): AuthBasic,
+                        State(state): State<RoadworkServerData>,
+                        Path((user_name, team_name)): Path<(String, String)>) -> Result<&'static str, StatusCode> {
+    info!("link_user_team {} {}", user_name, team_name);
+    check_admin(&state.admin_service, &username, &password).await?;
+    state.user_repository.link_user_team(&user_name, &team_name).await.map_or(Ok("KO"), |_| Ok("OK"))
+}
+
+async fn add_user(AuthBasic((username, password)): AuthBasic,
                              State(state): State<RoadworkServerData>,
                              Json(new_user): Json<User>) -> Result<&'static str, StatusCode> {
     info!("add_user {:?}", new_user);

@@ -1,5 +1,6 @@
-use log::{info, warn};
+use log::info;
 use sqlx::Row;
+
 use crate::service::user_repository::UserRepository;
 
 impl UserRepository {
@@ -27,7 +28,7 @@ impl UserRepository {
             .map_err(|err| format!("Error inserting team {}: {}", team, err))
     }
 
-    pub(crate) async fn remove_team(&self, team: &String) -> Result<(), String> {
+    pub(crate) async fn delete_team(&self, team: &String) -> Result<(), String> {
         info!("remove_team {}", team);
         if self.team_has_users(team).await {
             return Err(format!("Team {} has users", team));

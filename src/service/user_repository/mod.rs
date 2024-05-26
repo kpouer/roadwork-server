@@ -82,7 +82,7 @@ impl UserRepository {
         vec![]
     }
 
-    async fn link_user_team(&self, username: &str, team: &str) {
+    pub(crate) async fn link_user_team(&self, username: &str, team: &str) -> Result<(), String> {
         info!("link_user_team {} {}", username, team);
         let query = "INSERT INTO user_team (username, team) VALUES (?, ?)";
         let result = sqlx::query(query)
@@ -90,10 +90,8 @@ impl UserRepository {
             .bind(team)
             .execute(&self.pool)
             .await;
-        match result {
-            Ok(_) => {},
-            Err(err) => warn!("Error linking user {} with team {}: {}", username, team, err)
-        }
+        result.map(|_| ())
+            .map_err(|err| format!("Error linking user {} with team {}: {}", username, team, err))
     }
 }
 

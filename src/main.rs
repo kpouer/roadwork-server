@@ -23,7 +23,7 @@ pub(crate) struct RoadworkServerData {
 #[tokio::main]
 async fn main() {
     env_logger::init();
-    log::info!("Starting Roadwork server");
+    info!("Starting Roadwork server");
     let user_repository = UserRepository::new().await.unwrap();
     let admin_service = AdminService::new(user_repository.clone()).await;
     let roadwork_server_data = RoadworkServerData {
@@ -31,6 +31,7 @@ async fn main() {
         admin_service,
     };
     let app = Router::new()
+        .route("/info", get(|| async { "Roadwork server by kpouer" }))
         .route("/ping", get(|| async { "pong" }))
         .nest("/admin", admin_routes())
         .nest("/user", user_routes())

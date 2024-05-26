@@ -1,8 +1,12 @@
 FROM rust:1.78-alpine3.20 as build
-COPY Cargo.toml /
-COPY src /
-RUN cargo build 
+COPY Cargo.toml /Cargo.toml
+COPY src /src
+RUN apk update && apk add --no-cache musl-dev
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+        cargo build --release
 FROM alpine:3.20
-COPY --from=build /target/debug/roadwork_server /
+COPY --from=build /target/release/roadwork_server /
+RUN adduser -D roadwork-server
+USER roadwork-server
 EXPOSE 8080
-CMD ["/roadwork_server"]
+CMD ["./roadwork_server"]
