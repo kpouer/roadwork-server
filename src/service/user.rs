@@ -58,7 +58,7 @@ impl AdminService {
                                  username: &String,
                                  password: &String,
                                  team: &String) -> bool {
-        if let Some(user) = self.find_valid_user(username, &password).await {
+        if let Some(user) = self.find_valid_user(username, password).await {
             if user.teams.contains(team) {
                 return true;
             }

@@ -13,7 +13,7 @@ pub(crate) fn user_routes() -> Router<RoadworkServerData> {
         .route("/change_password", post(change_password))
         .route("/info", get(get_user))
         .route("/check/:bcrypted/:password", get(check))
-        .route("/salt/:password", get(salt))
+        .route("/salt", post(salt))
         .route("/test_connection/:teamname", get(test_connection))
 }
 
@@ -29,7 +29,7 @@ async fn test_connection(AuthBasic((username, password)): AuthBasic,
         return format!("User {} is not in team {}", username, teamname);
     }
 
-    return "User is invalid".to_string();
+    "User is invalid".to_string()
 }
 
 async fn change_password(AuthBasic((username, password)): AuthBasic,
@@ -45,10 +45,9 @@ async fn change_password(AuthBasic((username, password)): AuthBasic,
         return Err("Password is missing");
     }
     let password = password.unwrap();
-    if state.admin_service.get_user(&username, &password).await.is_some() {
-        if state.admin_service.change_password(&username, &new_password).await.is_ok() {
-            return Ok(StatusCode::NO_CONTENT);
-        }
+    if state.admin_service.get_user(&username, &password).await.is_some() && 
+        state.admin_service.change_password(&username, &new_password).await.is_ok() {
+        return Ok(StatusCode::NO_CONTENT);
     }
     Err("Password not changed")
 }
@@ -68,7 +67,7 @@ async fn get_user(AuthBasic((username, password)): AuthBasic,
     }
 }
 
-pub(crate) async fn check(Path((bcrypted, password)): Path<(String, String)>) -> &'static str {
+async fn check(Path((bcrypted, password)): Path<(String, String)>) -> &'static str {
     info!("check XXXXXXX");
     let result = hash::check(bcrypted.as_str(), &password);
     if result {
@@ -78,7 +77,7 @@ pub(crate) async fn check(Path((bcrypted, password)): Path<(String, String)>) ->
     }
 }
 
-pub(crate) async fn salt(Path(password): Path<String>) -> String {
+async fn salt(password: String) -> String {
     info!("Salt XXXXXXX");
     let salted_password = hash::salt(&password);
     let response = format!("Bcrypt {} -> {}", password, salted_password);

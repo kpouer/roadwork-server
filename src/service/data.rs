@@ -42,10 +42,8 @@ fn save(team: &str, opendata_service: &str, roadwork_data: &HashMap<String, Sync
     info!("save to {}", path);
     let path = Path::new(&path);
     if let Some(parent) = path.parent() {
-        if !parent.exists() {
-            if let Ok(_) = fs::create_dir_all(parent) {} else {
-                error!("Unable to create directory {}", parent.display());
-            }
+        if !parent.exists() && fs::create_dir_all(parent).is_err() {
+            error!("Unable to create directory {}", parent.display());
         }
     }
     serde_json::to_writer(&File::create(path).unwrap(), roadwork_data).unwrap();

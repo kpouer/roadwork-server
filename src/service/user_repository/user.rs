@@ -58,7 +58,7 @@ impl UserRepository {
         let result = sqlx::query(query)
             .bind(&user.username)
             .bind(&user.password_hash)
-            .bind(&user.admin)
+            .bind(user.admin)
             .execute(&self.pool)
             .await;
         result.map(|_| ())
@@ -67,7 +67,7 @@ impl UserRepository {
 
     pub(crate) async fn delete_user(&self, username: &String) -> Result<(), String> {
         info!("delete_user {}", username);
-        let _ = self.remove_all_user_teams(username).await?;
+        self.remove_all_user_teams(username).await?;
         let query = "DELETE FROM user WHERE username = ?";
         let result = sqlx::query(query)
             .bind(username)

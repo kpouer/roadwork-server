@@ -17,6 +17,7 @@ pub(crate) fn admin_routes() -> Router<RoadworkServerData> {
         .route("/users", get(list_users))
         .route("/user", post(add_user))
         .route("/user/:user_name", delete(delete_user))
+        .route("/user/:user_name/new_password", post(new_password))
         .route("/link/user/:user_name/team/:team_name", get(link_user_team))
 }
 
@@ -70,6 +71,15 @@ async fn add_user(AuthBasic((username, password)): AuthBasic,
     state.user_repository.insert_user(&new_user).await.map_or(Ok("KO"), |_| Ok("OK"))
 }
 
+async fn new_password(AuthBasic((username, password)): AuthBasic,
+                      State(state): State<RoadworkServerData>,
+                      Path(user_name): Path<String>,
+                      new_password: String) -> Result<&'static str, StatusCode> {
+    info!("new_password for user {}", user_name);
+    check_admin(&state.admin_service, &username, &password).await?;
+    state.admin_service.change_password(&user_name, &new_password).await.map_or(Ok("KO"), |_| Ok("OK"))
+}
+
 async fn delete_user(AuthBasic((username, password)): AuthBasic,
                      State(state): State<RoadworkServerData>,
                      Path(removed_user): Path<String>) -> Result<&'static str, StatusCode> {
@@ -85,5 +95,5 @@ async fn check_admin(admin_service: &AdminService, username: &String, password: 
         }
     }
     warn!("User {} is not an admin", username);
-    return Err(StatusCode::UNAUTHORIZED);
+    Err(StatusCode::UNAUTHORIZED)
 }
