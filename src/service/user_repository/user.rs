@@ -17,7 +17,11 @@ impl UserRepository {
         users
     }
 
-    pub(crate) async fn update_password(&self, user_name: &str, salted_password: String) -> Result<(), String> {
+    pub(crate) async fn update_password(
+        &self,
+        user_name: &str,
+        salted_password: String,
+    ) -> Result<(), String> {
         info!("update_password {}", user_name);
         let query = "UPDATE user SET password_hash = ? WHERE username = ?";
         let result = sqlx::query(query)
@@ -25,7 +29,8 @@ impl UserRepository {
             .bind(user_name)
             .execute(&self.pool)
             .await;
-        result.map(|_| ())
+        result
+            .map(|_| ())
             .map_err(|err| format!("Error updating password for user {}: {}", user_name, err))
     }
 
@@ -61,7 +66,8 @@ impl UserRepository {
             .bind(user.admin)
             .execute(&self.pool)
             .await;
-        result.map(|_| ())
+        result
+            .map(|_| ())
             .map_err(|err| format!("Error inserting user {:?}: {}", user, err))
     }
 
@@ -73,18 +79,17 @@ impl UserRepository {
             .bind(username)
             .fetch_all(&self.pool)
             .await;
-        result.map(|_| ())
+        result
+            .map(|_| ())
             .map_err(|err| format!("Error delete_user {} : {}", username, err))
     }
 
     async fn remove_all_user_teams(&self, username: &String) -> Result<(), String> {
         info!("remove_all_user_teams {}", username);
         let query = "DELETE FROM user_team WHERE username = ?";
-        let result = sqlx::query(query)
-            .bind(username)
-            .execute(&self.pool)
-            .await;
-        result.map(|_| ())
+        let result = sqlx::query(query).bind(username).execute(&self.pool).await;
+        result
+            .map(|_| ())
             .map_err(|err| format!("Error removin all teams from user {} : {}", username, err))
     }
 }

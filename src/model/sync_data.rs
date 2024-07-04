@@ -15,7 +15,6 @@ pub(crate) struct SyncData {
     pub(crate) dirty: bool,
 }
 
-
 impl Default for SyncData {
     fn default() -> Self {
         SyncData {

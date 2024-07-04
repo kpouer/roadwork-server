@@ -1,6 +1,6 @@
 use axum::http::StatusCode;
-use axum::Router;
 use axum::routing::get;
+use axum::Router;
 use log::info;
 
 use crate::router::admin::admin_routes;
@@ -10,8 +10,8 @@ use crate::service::user::AdminService;
 use crate::service::user_repository::UserRepository;
 
 mod hash;
-mod router;
 mod model;
+mod router;
 mod service;
 
 #[derive(Clone)]
@@ -37,8 +37,7 @@ async fn main() {
         .nest("/user", user_routes())
         .nest("/roadwork", roadwork_routes())
         .with_state(roadwork_server_data)
-        .fallback(|| async { (StatusCode::NOT_FOUND, "Not Found") })
-        ;
+        .fallback(|| async { (StatusCode::NOT_FOUND, "Not Found") });
     let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
     info!("Listen on 0.0.0.0:8080");
     axum::serve(listener, app).await.unwrap();

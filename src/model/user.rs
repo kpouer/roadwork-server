@@ -1,7 +1,7 @@
-use std::fmt::Display;
+use crate::hash;
 use log::debug;
 use serde::{Deserialize, Serialize};
-use crate::hash;
+use std::fmt::Display;
 
 #[derive(Clone, Deserialize, Serialize, Debug)]
 pub(crate) struct User {
@@ -24,8 +24,10 @@ impl User {
 
 impl Display for User {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let str = format!("User {{ username: {}, password_hash: XXXX, teams: {:?}, admin: {} }}",
-                          self.username, self.teams, self.admin);
+        let str = format!(
+            "User {{ username: {}, password_hash: XXXX, teams: {:?}, admin: {} }}",
+            self.username, self.teams, self.admin
+        );
         write!(f, "{}", str)
     }
 }

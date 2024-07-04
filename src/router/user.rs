@@ -1,12 +1,12 @@
-use axum::{Json, Router};
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::routing::{get, post};
+use axum::{Json, Router};
 use axum_auth::AuthBasic;
 use log::{info, warn};
 
-use crate::{hash, RoadworkServerData};
 use crate::model::user::User;
+use crate::{hash, RoadworkServerData};
 
 pub(crate) fn user_routes() -> Router<RoadworkServerData> {
     Router::new()
@@ -17,9 +17,11 @@ pub(crate) fn user_routes() -> Router<RoadworkServerData> {
         .route("/test_connection/:teamname", get(test_connection))
 }
 
-async fn test_connection(AuthBasic((username, password)): AuthBasic,
-                         State(state): State<RoadworkServerData>,
-                         Path(teamname): Path<String>) -> String {
+async fn test_connection(
+    AuthBasic((username, password)): AuthBasic,
+    State(state): State<RoadworkServerData>,
+    Path(teamname): Path<String>,
+) -> String {
     info!("test_connection user={}, teamname={}", username, teamname);
     let password: String = password.unwrap_or_else(|| "".to_string());
     if let Some(user) = state.admin_service.get_user(&username, &password).await {
@@ -32,9 +34,11 @@ async fn test_connection(AuthBasic((username, password)): AuthBasic,
     "User is invalid".to_string()
 }
 
-async fn change_password(AuthBasic((username, password)): AuthBasic,
-                         State(state): State<RoadworkServerData>,
-                         new_password: String) -> Result<StatusCode, &'static str> {
+async fn change_password(
+    AuthBasic((username, password)): AuthBasic,
+    State(state): State<RoadworkServerData>,
+    new_password: String,
+) -> Result<StatusCode, &'static str> {
     info!("change_password username={}", username);
     if new_password.len() < 8 {
         warn!("Password is too short");
@@ -45,15 +49,26 @@ async fn change_password(AuthBasic((username, password)): AuthBasic,
         return Err("Password is missing");
     }
     let password = password.unwrap();
-    if state.admin_service.get_user(&username, &password).await.is_some() && 
-        state.admin_service.change_password(&username, &new_password).await.is_ok() {
+    if state
+        .admin_service
+        .get_user(&username, &password)
+        .await
+        .is_some()
+        && state
+            .admin_service
+            .change_password(&username, &new_password)
+            .await
+            .is_ok()
+    {
         return Ok(StatusCode::NO_CONTENT);
     }
     Err("Password not changed")
 }
 
-async fn get_user(AuthBasic((username, password)): AuthBasic,
-                  State(state): State<RoadworkServerData>) -> Result<Json<User>, StatusCode> {
+async fn get_user(
+    AuthBasic((username, password)): AuthBasic,
+    State(state): State<RoadworkServerData>,
+) -> Result<Json<User>, StatusCode> {
     info!("get_user username={}", username);
     let password: String = password.unwrap_or_else(|| "".to_string());
     if let Some(user) = state.admin_service.get_user(&username, &password).await {
@@ -84,4 +99,3 @@ async fn salt(password: String) -> String {
     info!("Salt XXXXXXX -> {}", salted_password);
     response
 }
-

@@ -1,5 +1,5 @@
-mod user;
 mod team;
+mod user;
 
 use std::fs;
 use std::path::Path;
@@ -18,9 +18,7 @@ pub(crate) struct UserRepository {
 impl UserRepository {
     pub(crate) async fn new() -> Result<Self, sqlx::Error> {
         let (pool, should_init_db) = get_database_pool().await?;
-        let repository = UserRepository {
-            pool
-        };
+        let repository = UserRepository { pool };
 
         if should_init_db {
             repository.init_db().await;
@@ -76,7 +74,7 @@ impl UserRepository {
             .await;
         match rows {
             Ok(rows) => return rows.iter().map(|row| row.get(0)).collect(),
-            Err(err) => warn!("Error fetching teams for user {}: {}", username, err)
+            Err(err) => warn!("Error fetching teams for user {}: {}", username, err),
         }
 
         vec![]
@@ -90,8 +88,12 @@ impl UserRepository {
             .bind(team)
             .execute(&self.pool)
             .await;
-        result.map(|_| ())
-            .map_err(|err| format!("Error linking user {} with team {}: {}", username, team, err))
+        result.map(|_| ()).map_err(|err| {
+            format!(
+                "Error linking user {} with team {}: {}",
+                username, team, err
+            )
+        })
     }
 }
 
@@ -105,5 +107,3 @@ async fn get_database_pool() -> Result<(Pool<Sqlite>, bool), Error> {
     let pool = SqlitePool::connect(&format!("sqlite:{}", db_path)).await?;
     Ok((pool, should_init_db))
 }
-
-

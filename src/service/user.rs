@@ -1,11 +1,11 @@
-use log::{debug, info, warn};
 use crate::hash;
 use crate::model::user::User;
 use crate::service::user_repository::UserRepository;
+use log::{debug, info, warn};
 
 #[derive(Clone)]
 pub(crate) struct AdminService {
-    user_repository: UserRepository
+    user_repository: UserRepository,
 }
 
 impl AdminService {
@@ -31,11 +31,17 @@ impl AdminService {
         None
     }
 
-    pub(crate) async fn change_password<S: AsRef<str>>(&self, user_name: &S, clear_password: &String) -> Result<(), String> {
+    pub(crate) async fn change_password<S: AsRef<str>>(
+        &self,
+        user_name: &S,
+        clear_password: &String,
+    ) -> Result<(), String> {
         let user_name = user_name.as_ref();
         info!("change_password username={}", user_name);
         let salted_password = hash::salt(clear_password);
-        self.user_repository.update_password(user_name, salted_password).await
+        self.user_repository
+            .update_password(user_name, salted_password)
+            .await
     }
 
     /// Check if the user is an admin
@@ -54,10 +60,12 @@ impl AdminService {
         false
     }
 
-    pub(crate) async fn has_team(&self,
-                                 username: &String,
-                                 password: &String,
-                                 team: &String) -> bool {
+    pub(crate) async fn has_team(
+        &self,
+        username: &String,
+        password: &String,
+        team: &String,
+    ) -> bool {
         if let Some(user) = self.find_valid_user(username, password).await {
             if user.teams.contains(team) {
                 return true;
@@ -66,7 +74,11 @@ impl AdminService {
         false
     }
 
-    async fn find_valid_user<S: AsRef<str>>(&self, username: &S, password: &String) -> Option<User> {
+    async fn find_valid_user<S: AsRef<str>>(
+        &self,
+        username: &S,
+        password: &String,
+    ) -> Option<User> {
         debug!("find_valid_user -> {}", username.as_ref());
         if let Some(user) = self.user_repository.find_user(username).await {
             debug!("find_valid_user : found {:?}", user);

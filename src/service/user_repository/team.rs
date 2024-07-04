@@ -19,12 +19,10 @@ impl UserRepository {
     pub(crate) async fn insert_team(&self, team: &str) -> Result<(), String> {
         info!("insert_team {}", team);
         let query = "INSERT INTO team (name) VALUES (?)";
-        let result = sqlx::query(query)
-            .bind(team)
-            .execute(&self.pool)
-            .await;
+        let result = sqlx::query(query).bind(team).execute(&self.pool).await;
 
-        result.map(|_| ())
+        result
+            .map(|_| ())
             .map_err(|err| format!("Error inserting team {}: {}", team, err))
     }
 
@@ -34,11 +32,9 @@ impl UserRepository {
             return Err(format!("Team {} has users", team));
         }
         let query = "DELETE FROM team WHERE name = ?";
-        let result = sqlx::query(query)
-            .bind(team)
-            .execute(&self.pool)
-            .await;
-        result.map(|_| ())
+        let result = sqlx::query(query).bind(team).execute(&self.pool).await;
+        result
+            .map(|_| ())
             .map_err(|err| format!("Error removing team {}: {}", team, err))
     }
 

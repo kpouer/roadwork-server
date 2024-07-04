@@ -18,7 +18,7 @@ impl Display for Status {
             Status::Later => "Later",
             Status::Ignored => "Ignored",
             Status::Finished => "Finished",
-            Status::Treated => "Treated"
+            Status::Treated => "Treated",
         };
         write!(f, "{}", str)
     }
