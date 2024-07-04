@@ -8,10 +8,10 @@ edition = "2021"
 [dependencies]
 axum = "0.7.5"
 bcrypt = "0.15.1"
-serde = { version = "1.0.200", features = ["derive"] }
-serde_json = "1.0.116"
+serde = { version = "1.0.203", features = ["derive"] }
+serde_json = "1.0.117"
 log = "0.4.21"
 env_logger = "0.11.3"
-tokio = { version = "1.37.0", features = ["full"] }
+tokio = { version = "1.38.0", features = ["full"] }
 axum-auth = "0.7.0"
 sqlx = { version = "0.7.4", features = ["runtime-tokio", "sqlite", "macros"] }
