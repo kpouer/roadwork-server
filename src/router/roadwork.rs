@@ -27,10 +27,7 @@ pub(crate) async fn set_data(
         .has_team(&username, &password, &team)
         .await
     {
-        info!(
-            "set_data user={} team={} service={}",
-            username, team, opendata_service
-        );
+        info!("set_data user={username} team={team} service={opendata_service}");
         let opendata_service = opendata_service
             .strip_suffix(".json")
             .unwrap_or(&opendata_service);
@@ -38,7 +35,7 @@ pub(crate) async fn set_data(
         let string_sync_data_map = data::set_data(team.as_str(), opendata_service, sync_data_list);
         Ok(Json(string_sync_data_map))
     } else {
-        warn!("User {} is not valid for team {}", username, team);
+        warn!("User {username} is not valid for team {team}");
         Err(StatusCode::UNAUTHORIZED)
     };
 }

@@ -23,27 +23,27 @@ pub(crate) fn set_data(
 
 fn get_data(team: &str, opendata_service: &str) -> HashMap<String, SyncData> {
     let data_path = get_path(team, opendata_service);
-    info!("getData path={}", data_path);
+    info!("getData path={data_path}");
     match File::open(data_path) {
         Ok(file) => {
             let reader = BufReader::new(file);
             match serde_json::from_reader(reader) {
                 Ok(sync_data_list) => {
-                    info!("Returning data for {}", opendata_service);
+                    info!("Returning data for {opendata_service}");
                     return sync_data_list;
                 }
-                Err(e) => info!("Error reading data: {}", e),
+                Err(e) => info!("Error reading data: {e}"),
             }
         }
-        Err(e) => info!("Error reading data: {}", e),
+        Err(e) => info!("Error reading data: {e}"),
     }
-    info!("Nothing to return for {}", opendata_service);
+    info!("Nothing to return for {opendata_service}");
     HashMap::new()
 }
 
 fn save(team: &str, opendata_service: &str, roadwork_data: &HashMap<String, SyncData>) {
     let path = get_path(team, opendata_service);
-    info!("save to {}", path);
+    info!("save to {path}");
     let path = Path::new(&path);
     if let Some(parent) = path.parent() {
         if !parent.exists() && fs::create_dir_all(parent).is_err() {
@@ -77,11 +77,11 @@ fn merge(
                 } else {
                     // server version is more up to date, but it is also modified by the client, use the greatest status
                     if new_sync_data.status < existing_sync_data.status {
-                        info!("{} dirty=true server time is modified but server version is better ({} > {})", id, existing_sync_data.status, new_sync_data.status);
+                        info!("{id} dirty=true server time is modified but server version is better ({} > {})", existing_sync_data.status, new_sync_data.status);
                         // server version is better
                         new_sync_data.copy(existing_sync_data);
                     } else {
-                        info!("{} dirty=true server time is modified but server version is lower ({} < {})", id, existing_sync_data.status, new_sync_data.status);
+                        info!("{id} dirty=true server time is modified but server version is lower ({} < {})", existing_sync_data.status, new_sync_data.status);
                         new_sync_data.update_time(server_update_time);
                     }
                 }
@@ -101,5 +101,5 @@ fn merge(
 }
 
 fn get_path(team: &str, opendata_service: &str) -> String {
-    format!("data/{}/{}.json", team, opendata_service)
+    format!("data/{team}/{opendata_service}.json")
 }

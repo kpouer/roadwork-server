@@ -119,7 +119,7 @@ async fn delete_user(
     State(state): State<RoadworkServerData>,
     Path(removed_user): Path<String>,
 ) -> Result<&'static str, StatusCode> {
-    info!("remove_user {}", removed_user);
+    info!("remove_user {removed_user}");
     check_admin(&state.admin_service, &username, &password).await?;
     state
         .user_repository
@@ -138,6 +138,6 @@ async fn check_admin(
             return Ok(());
         }
     }
-    warn!("User {} is not an admin", username);
+    warn!("User {username} is not an admin");
     Err(StatusCode::UNAUTHORIZED)
 }
