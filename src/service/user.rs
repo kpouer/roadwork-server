@@ -19,7 +19,7 @@ impl AdminService {
         debug!("get_user -> {}", username.as_ref());
         let user = self.user_repository.find_user(&username).await;
         if let Some(user) = user {
-            debug!("get_user : found {:?}", user);
+            debug!("get_user : found {user:?}");
             if user.is_valid(password) {
                 debug!("get_user password is valid");
                 return Some(user);
@@ -37,7 +37,7 @@ impl AdminService {
         clear_password: &String,
     ) -> Result<(), String> {
         let user_name = user_name.as_ref();
-        info!("change_password username={}", user_name);
+        info!("change_password username={user_name}");
         let salted_password = hash::salt(clear_password);
         self.user_repository
             .update_password(user_name, salted_password)
@@ -47,7 +47,7 @@ impl AdminService {
     /// Check if the user is an admin
     /// It is admin is the user and password are valid and the password has been modified
     pub(crate) async fn is_admin(&self, username: &String, password: &String) -> bool {
-        info!("is_admin username={}", username);
+        info!("is_admin username={username}");
         if password == "admin" {
             warn!("Password was not modified!");
             return false;
@@ -81,7 +81,7 @@ impl AdminService {
     ) -> Option<User> {
         debug!("find_valid_user -> {}", username.as_ref());
         if let Some(user) = self.user_repository.find_user(username).await {
-            debug!("find_valid_user : found {:?}", user);
+            debug!("find_valid_user : found {user:?}");
             if user.is_valid(password) {
                 debug!("find_valid_user password is valid");
                 return Some(user);

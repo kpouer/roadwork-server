@@ -22,7 +22,7 @@ impl UserRepository {
         user_name: &str,
         salted_password: String,
     ) -> Result<(), String> {
-        info!("update_password {}", user_name);
+        info!("update_password {user_name}");
         let query = "UPDATE user SET password_hash = ? WHERE username = ?";
         let result = sqlx::query(query)
             .bind(&salted_password)
@@ -36,7 +36,7 @@ impl UserRepository {
 
     pub(crate) async fn find_user<S: AsRef<str>>(&self, username: S) -> Option<User> {
         let username = username.as_ref();
-        info!("find_user {}", username);
+        info!("find_user {username}");
         let query = "SELECT username, password_hash, admin FROM user WHERE username = ?";
         let row = sqlx::query(query)
             .bind(username)
@@ -68,11 +68,11 @@ impl UserRepository {
             .await;
         result
             .map(|_| ())
-            .map_err(|err| format!("Error inserting user {:?}: {}", user, err))
+            .map_err(|err| format!("Error inserting user {user:?}: {err}"))
     }
 
     pub(crate) async fn delete_user(&self, username: &String) -> Result<(), String> {
-        info!("delete_user {}", username);
+        info!("delete_user {username}");
         self.remove_all_user_teams(username).await?;
         let query = "DELETE FROM user WHERE username = ?";
         let result = sqlx::query(query)
@@ -81,15 +81,15 @@ impl UserRepository {
             .await;
         result
             .map(|_| ())
-            .map_err(|err| format!("Error delete_user {} : {}", username, err))
+            .map_err(|err| format!("Error delete_user {username} : {err}"))
     }
 
     async fn remove_all_user_teams(&self, username: &String) -> Result<(), String> {
-        info!("remove_all_user_teams {}", username);
+        info!("remove_all_user_teams {username}");
         let query = "DELETE FROM user_team WHERE username = ?";
         let result = sqlx::query(query).bind(username).execute(&self.pool).await;
         result
             .map(|_| ())
-            .map_err(|err| format!("Error removin all teams from user {} : {}", username, err))
+            .map_err(|err| format!("Error removin all teams from user {username} : {err}"))
     }
 }

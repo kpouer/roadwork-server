@@ -74,7 +74,7 @@ impl UserRepository {
             .await;
         match rows {
             Ok(rows) => return rows.iter().map(|row| row.get(0)).collect(),
-            Err(err) => warn!("Error fetching teams for user {}: {}", username, err),
+            Err(err) => warn!("Error fetching teams for user {username}: {err}"),
         }
 
         vec![]
@@ -88,12 +88,9 @@ impl UserRepository {
             .bind(team)
             .execute(&self.pool)
             .await;
-        result.map(|_| ()).map_err(|err| {
-            format!(
-                "Error linking user {} with team {}: {}",
-                username, team, err
-            )
-        })
+        result
+            .map(|_| ())
+            .map_err(|err| format!("Error linking user {username} with team {team}: {err}"))
     }
 }
 

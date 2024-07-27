@@ -7,7 +7,7 @@ pub(crate) fn salt(password: &String) -> String {
 pub(crate) fn check(expected_password_hash: &str, password: &str) -> bool {
     let result = bcrypt::verify(password, expected_password_hash);
     result.unwrap_or_else(|err| {
-        warn!("Error checking password: {}", err);
+        warn!("Error checking password: {err}");
         false
     })
 }

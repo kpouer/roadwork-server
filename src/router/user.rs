@@ -22,13 +22,13 @@ async fn test_connection(
     State(state): State<RoadworkServerData>,
     Path(teamname): Path<String>,
 ) -> String {
-    info!("test_connection user={}, teamname={}", username, teamname);
+    info!("test_connection user={username}, teamname={teamname}");
     let password: String = password.unwrap_or_else(|| "".to_string());
     if let Some(user) = state.admin_service.get_user(&username, &password).await {
         if user.teams.contains(&teamname) {
             return "OK".to_string();
         }
-        return format!("User {} is not in team {}", username, teamname);
+        return format!("User {username} is not in team {teamname}");
     }
 
     "User is invalid".to_string()
@@ -39,7 +39,7 @@ async fn change_password(
     State(state): State<RoadworkServerData>,
     new_password: String,
 ) -> Result<StatusCode, &'static str> {
-    info!("change_password username={}", username);
+    info!("change_password username={username}");
     if new_password.len() < 8 {
         warn!("Password is too short");
         return Err("Password is too short");
@@ -69,12 +69,12 @@ async fn get_user(
     AuthBasic((username, password)): AuthBasic,
     State(state): State<RoadworkServerData>,
 ) -> Result<Json<User>, StatusCode> {
-    info!("get_user username={}", username);
+    info!("get_user username={username}");
     let password: String = password.unwrap_or_else(|| "".to_string());
     if let Some(user) = state.admin_service.get_user(&username, &password).await {
         let mut web_user = user.clone();
         web_user.password_hash = "?????".to_string();
-        info!("get_user -> {:?}", web_user);
+        info!("get_user -> {web_user:?}");
         Ok(Json(web_user))
     } else {
         warn!("get_user user is invalid");
@@ -95,7 +95,7 @@ async fn check(Path((bcrypted, password)): Path<(String, String)>) -> &'static s
 async fn salt(password: String) -> String {
     info!("Salt XXXXXXX");
     let salted_password = hash::salt(&password);
-    let response = format!("Bcrypt {} -> {}", password, salted_password);
-    info!("Salt XXXXXXX -> {}", salted_password);
+    let response = format!("Bcrypt {password} -> {salted_password}");
+    info!("Salt XXXXXXX -> {salted_password}");
     response
 }

@@ -24,10 +24,10 @@ impl User {
 
 impl Display for User {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let str = format!(
+        write!(
+            f,
             "User {{ username: {}, password_hash: XXXX, teams: {:?}, admin: {} }}",
             self.username, self.teams, self.admin
-        );
-        write!(f, "{}", str)
+        )
     }
 }
