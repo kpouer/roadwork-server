@@ -1,4 +1,4 @@
-FROM rust:1.79-alpine3.20 as build
+FROM rust:1.86-alpin as build
 COPY Cargo.toml /Cargo.toml
 COPY src /src
 RUN apk update && apk add --no-cache musl-dev
