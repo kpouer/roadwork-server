@@ -1,10 +1,10 @@
-FROM rust:1.86-alpine as build
+FROM rust:1.89-alpine as build
 COPY Cargo.toml /Cargo.toml
 COPY src /src
 RUN apk update && apk add --no-cache musl-dev
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
         cargo build --release
-FROM alpine:3.20.1
+FROM alpine:latest
 COPY --from=build /target/release/roadwork_server /
 RUN adduser -D roadwork-server
 USER roadwork-server
