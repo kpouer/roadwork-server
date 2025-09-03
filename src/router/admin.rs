@@ -1,24 +1,23 @@
-use crate::model::user::User;
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::routing::{delete, get, post};
 use axum::{Json, Router};
 use axum_auth::AuthBasic;
 use log::{info, warn};
-
+use roadwork_sync_lib::user::User;
 use crate::service::user::AdminService;
 use crate::RoadworkServerData;
 
 pub(crate) fn admin_routes() -> Router<RoadworkServerData> {
     Router::new()
         .route("/teams", get(list_teams))
-        .route("/team/:team_name", post(add_team))
-        .route("/team/:team_name", delete(delete_team))
+        .route("/team/{team_name}", post(add_team))
+        .route("/team/{team_name}", delete(delete_team))
         .route("/users", get(list_users))
         .route("/user", post(add_user))
-        .route("/user/:user_name", delete(delete_user))
-        .route("/user/:user_name/new_password", post(new_password))
-        .route("/link/user/:user_name/team/:team_name", get(link_user_team))
+        .route("/user/{user_name}", delete(delete_user))
+        .route("/user/{user_name}/new_password", post(new_password))
+        .route("/link/user/{user_name}/team/{team_name}", get(link_user_team))
 }
 
 async fn list_teams(

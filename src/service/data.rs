@@ -6,8 +6,7 @@ use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use log::{error, info};
-
-use crate::model::sync_data::SyncData;
+use roadwork_sync_lib::sync_data::SyncData;
 
 pub(crate) fn set_data(
     team: &str,

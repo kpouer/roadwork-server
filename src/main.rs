@@ -10,7 +10,6 @@ use crate::service::user::AdminService;
 use crate::service::user_repository::UserRepository;
 
 mod hash;
-mod model;
 mod router;
 mod service;
 mod error;

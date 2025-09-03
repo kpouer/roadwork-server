@@ -1,7 +1,7 @@
 use log::info;
+use roadwork_sync_lib::user::User;
 use sqlx::Row;
 
-use crate::model::user::User;
 use crate::service::user_repository::UserRepository;
 
 impl UserRepository {

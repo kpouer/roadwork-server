@@ -4,17 +4,16 @@ use axum::routing::{get, post};
 use axum::{Json, Router};
 use axum_auth::AuthBasic;
 use log::{info, warn};
-
-use crate::model::user::User;
+use roadwork_sync_lib::user::User;
 use crate::{hash, RoadworkServerData};
 
 pub(crate) fn user_routes() -> Router<RoadworkServerData> {
     Router::new()
         .route("/change_password", post(change_password))
         .route("/info", get(get_user))
-        .route("/check/:bcrypted/:password", get(check))
+        .route("/check/{bcrypted}/{password}", get(check))
         .route("/salt", post(salt))
-        .route("/test_connection/:teamname", get(test_connection))
+        .route("/test_connection/{teamname}", get(test_connection))
 }
 
 async fn test_connection(

@@ -6,13 +6,12 @@ use axum::routing::post;
 use axum::{Json, Router};
 use axum_auth::AuthBasic;
 use log::warn;
-
-use crate::model::sync_data::SyncData;
+use roadwork_sync_lib::sync_data::SyncData;
 use crate::service::data;
 use crate::{info, RoadworkServerData};
 
 pub(crate) fn roadwork_routes() -> Router<RoadworkServerData> {
-    Router::new().route("/set_data/:team/:opendata_service", post(set_data))
+    Router::new().route("/set_data/{team}/{opendata_service}", post(set_data))
 }
 
 pub(crate) async fn set_data(

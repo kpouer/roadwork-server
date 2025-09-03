@@ -1,7 +1,7 @@
 use crate::hash;
-use crate::model::user::User;
 use crate::service::user_repository::UserRepository;
 use log::{debug, info, warn};
+use roadwork_sync_lib::user::User;
 
 #[derive(Clone)]
 pub(crate) struct AdminService {
@@ -20,7 +20,7 @@ impl AdminService {
         let user = self.user_repository.find_user(&username).await;
         if let Some(user) = user {
             debug!("get_user : found {:?}", user);
-            if user.is_valid(password) {
+            if self.is_valid(&user, password) {
                 debug!("get_user password is valid");
                 return Some(user);
             }
@@ -53,7 +53,7 @@ impl AdminService {
             return false;
         }
         if let Some(user) = self.user_repository.find_user(username).await {
-            if user.is_valid(password.as_str()) {
+            if self.is_valid(&user, password.as_str()) {
                 return user.admin;
             }
         }
@@ -82,12 +82,18 @@ impl AdminService {
         debug!("find_valid_user -> {}", username.as_ref());
         if let Some(user) = self.user_repository.find_user(username).await {
             debug!("find_valid_user : found {:?}", user);
-            if user.is_valid(password) {
+            if self.is_valid(&user, password) {
                 debug!("find_valid_user password is valid");
                 return Some(user);
             }
             debug!("find_valid_user password is invalid");
         }
         None
+    }
+
+    fn is_valid<S: AsRef<str>>(&self, user: &User, password: S) -> bool {
+        debug!("is_valid username={}", user.username);
+        let password = password.as_ref();
+        hash::check(&user.password_hash, password)
     }
 }

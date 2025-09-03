@@ -5,10 +5,10 @@ use std::fs;
 use std::path::Path;
 
 use log::{info, warn};
+use roadwork_sync_lib::user::User;
 use sqlx::{Error, Executor, Pool, Row, Sqlite, SqlitePool};
 
 use crate::hash;
-use crate::model::user::User;
 
 #[derive(Clone)]
 pub(crate) struct UserRepository {
